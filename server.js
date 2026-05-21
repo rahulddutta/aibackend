@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 import { connectDatabase } from './config/database.js'
 import conversationRoutes from './routes/conversations.js'
 import aiRoutes from './routes/ai.js'
+import uploadRoutes from './routes/upload.js'
 
 dotenv.config()
 
@@ -21,6 +22,7 @@ connectDatabase()
 app.use('/conversation', conversationRoutes)
 app.use('/conversations', conversationRoutes)
 app.use('/ask', aiRoutes)
+app.use('/upload', uploadRoutes)
 
 // Health check
 app.get('/health', (req, res) => {
