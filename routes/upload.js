@@ -47,4 +47,31 @@ router.post('/', upload.single('file'), async (req, res) => {
   }
 })
 
+router.get('/', async (req, res) => {
+  try {
+    const response = await axios.get(`${PYTHON_BACKEND_URL}/uploads`)
+    return res.json(response.data)
+  } catch (error) {
+    console.error('Error in /upload GET endpoint:', error?.response?.data || error.message)
+    return res.status(error.response?.status || 500).json({
+      error: error.response?.data?.error || 'Failed to fetch uploads',
+    })
+  }
+})
+
+router.delete('/:filename', async (req, res) => {
+  try {
+    const { filename } = req.params
+    const response = await axios.delete(
+      `${PYTHON_BACKEND_URL}/uploads/${encodeURIComponent(filename)}`
+    )
+    return res.json(response.data)
+  } catch (error) {
+    console.error('Error in /upload DELETE endpoint:', error?.response?.data || error.message)
+    return res.status(error.response?.status || 500).json({
+      error: error.response?.data?.error || 'Failed to delete upload',
+    })
+  }
+})
+
 export default router
