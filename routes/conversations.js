@@ -3,10 +3,24 @@ import { Conversation } from '../models/Conversation.js'
 
 const router = express.Router()
 
+function getSessionId(req, res) {
+  const sessionId = req.query.session_id || req.body?.session_id
+  if (!sessionId) {
+    res.status(400).json({ error: 'Missing required fields' })
+    return null
+  }
+  return sessionId
+}
+
 // GET /conversations - Get all conversations
 router.get('/', async (req, res) => {
   try {
-    const conversations = await Conversation.find()
+    const session_id = getSessionId(req, res)
+    if (!session_id) {
+      return
+    }
+
+    const conversations = await Conversation.find({ session_id })
       .sort({ updatedAt: -1 })
       .select('conversationId title lastMessage updatedAt')
       .limit(100)
@@ -21,12 +35,17 @@ router.get('/', async (req, res) => {
 // POST /conversations - Create new conversation
 router.post('/', async (req, res) => {
   try {
-    const { conversationId } = req.body
+    const { conversationId, session_id } = req.body
+    if (!session_id) {
+      return res.status(400).json({ error: 'Missing required fields' })
+    }
+
     const newConversationId =
       conversationId || require('crypto').randomUUID()
 
     const conversation = new Conversation({
       conversationId: newConversationId,
+      session_id,
       title: 'New Chat',
       messages: [],
     })
@@ -46,14 +65,19 @@ router.post('/', async (req, res) => {
 // GET /conversation/:conversationId - Get specific conversation
 router.get('/:conversationId', async (req, res) => {
   try {
+    const session_id = getSessionId(req, res)
+    if (!session_id) {
+      return
+    }
+
     const { conversationId } = req.params
 
-    let conversation = await Conversation.findOne({ conversationId })
+    let conversation = await Conversation.findOne({ conversationId, session_id })
 
     if (!conversation) {
-      // Create a new conversation if it doesn't exist
       conversation = new Conversation({
         conversationId,
+        session_id,
         title: 'New Chat',
         messages: [],
       })
@@ -70,11 +94,16 @@ router.get('/:conversationId', async (req, res) => {
 // PUT /conversation/:conversationId - Update conversation title
 router.put('/:conversationId', async (req, res) => {
   try {
+    const session_id = getSessionId(req, res)
+    if (!session_id) {
+      return
+    }
+
     const { conversationId } = req.params
     const { title } = req.body
 
     const conversation = await Conversation.findOneAndUpdate(
-      { conversationId },
+      { conversationId, session_id },
       { title },
       { new: true }
     )
@@ -93,9 +122,14 @@ router.put('/:conversationId', async (req, res) => {
 // DELETE /conversation/:conversationId - Delete conversation
 router.delete('/:conversationId', async (req, res) => {
   try {
+    const session_id = getSessionId(req, res)
+    if (!session_id) {
+      return
+    }
+
     const { conversationId } = req.params
 
-    await Conversation.findOneAndDelete({ conversationId })
+    await Conversation.findOneAndDelete({ conversationId, session_id })
 
     res.json({ success: true })
   } catch (error) {

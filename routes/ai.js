@@ -15,9 +15,10 @@ router.post('/', async (req, res) => {
     const {
       conversationId,
       messages,
+      session_id,
     } = req.body
 
-    if (!conversationId || !messages) {
+    if (!conversationId || !messages || !session_id) {
       return res.status(400).json({
         error: 'Missing required fields',
       })
@@ -27,12 +28,14 @@ router.post('/', async (req, res) => {
     let conversation =
       await Conversation.findOne({
         conversationId,
+        session_id,
       })
 
     if (!conversation) {
 
       conversation = new Conversation({
         conversationId,
+        session_id,
         title: 'New Chat',
         messages: [],
       })
@@ -50,7 +53,8 @@ router.post('/', async (req, res) => {
     // Get AI response
     const answer = await getAIResponse(
       conversationId,
-      messages
+      messages,
+      session_id
     )
 
     // Assistant message
@@ -72,6 +76,7 @@ router.post('/', async (req, res) => {
     res.json({
       answer,
       conversationId,
+      session_id,
       messages: conversation.messages,
     })
 
@@ -90,7 +95,8 @@ router.post('/', async (req, res) => {
 
 async function getAIResponse(
   conversationId,
-  messages
+  messages,
+  session_id
 ) {
 
   try {
@@ -103,6 +109,7 @@ async function getAIResponse(
       `${PYTHON_BACKEND_URL}/ask`,
       {
         conversationId,
+        session_id,
         messages,
       }
     )

@@ -18,11 +18,19 @@ router.post('/', upload.single('file'), async (req, res) => {
       })
     }
 
+    const session_id = req.body?.session_id
+    if (!session_id) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+      })
+    }
+
     const form = new FormData()
     form.append('file', req.file.buffer, {
       filename: req.file.originalname,
       contentType: req.file.mimetype,
     })
+    form.append('session_id', session_id)
 
     const response = await axios.post(
       `${PYTHON_BACKEND_URL}/upload`,
@@ -48,8 +56,17 @@ router.post('/', upload.single('file'), async (req, res) => {
 })
 
 router.get('/', async (req, res) => {
+  const session_id = req.query.session_id
+  if (!session_id) {
+    return res.status(400).json({
+      error: 'Missing required fields',
+    })
+  }
+
   try {
-    const response = await axios.get(`${PYTHON_BACKEND_URL}/uploads`)
+    const response = await axios.get(`${PYTHON_BACKEND_URL}/uploads`, {
+      params: { session_id },
+    })
     return res.json(response.data)
   } catch (error) {
     console.error('Error in /upload GET endpoint:', error?.response?.data || error.message)
@@ -60,10 +77,20 @@ router.get('/', async (req, res) => {
 })
 
 router.delete('/:filename', async (req, res) => {
+  const session_id = req.query.session_id
+  if (!session_id) {
+    return res.status(400).json({
+      error: 'Missing required fields',
+    })
+  }
+
   try {
     const { filename } = req.params
     const response = await axios.delete(
-      `${PYTHON_BACKEND_URL}/uploads/${encodeURIComponent(filename)}`
+      `${PYTHON_BACKEND_URL}/uploads/${encodeURIComponent(filename)}`,
+      {
+        params: { session_id },
+      }
     )
     return res.json(response.data)
   } catch (error) {

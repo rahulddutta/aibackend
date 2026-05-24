@@ -8,6 +8,11 @@ const conversationSchema = new mongoose.Schema(
       unique: true,
       index: true,
     },
+    session_id: {
+      type: String,
+      required: true,
+      index: true,
+    },
     title: {
       type: String,
       default: 'New Chat',
