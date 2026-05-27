@@ -144,12 +144,13 @@ router.post('/stream', async (req, res) => {
         `Calling Python streaming backend at ${PYTHON_BACKEND_URL}/ask/stream`
       )
 
+      const trimmedMessages = messages.slice(-6)
       const response = await axios.post(
         `${PYTHON_BACKEND_URL}/ask/stream`,
         {
           conversationId,
           session_id,
-          messages,
+          messages: trimmedMessages,
         },
         {
           responseType: 'stream',
@@ -257,12 +258,13 @@ async function getAIResponse(
       `Calling Python backend at ${PYTHON_BACKEND_URL}/ask`
     )
 
+    const trimmedMessages = messages.slice(-6)
     const response = await axios.post(
       `${PYTHON_BACKEND_URL}/ask`,
       {
         conversationId,
         session_id,
-        messages,
+        messages: trimmedMessages,
       }
     )
 
